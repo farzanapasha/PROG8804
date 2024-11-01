@@ -49,4 +49,17 @@ describe('getTodos', () => {
         expect(ctx.status).toBe(500);
         expect(ctx.body).toEqual({ error: mockError.message });
     });
+
+    it('should limit the number of todos returned', async () => {
+        // Arrange
+        const mockTodos = Array.from({ length: 10 }, (_, i) => ({ id: i + 1, data: `Test todo ${i + 1}`, done: false }));
+        supabase.from().select().limit.mockResolvedValue({ data: mockTodos, error: null });
+
+        // Act
+        await getTodos(ctx);
+
+        // Assert
+        expect(ctx.status).toBe(200);
+        expect(ctx.body.length).toBeLessThanOrEqual(10);
+    });
 });

@@ -3,7 +3,7 @@ const { getTodos, createTodo, updateTodo, deleteTodo } = require('../controllers
 
 const router = new Router();
 
-router.get('/', getTodos);
+router.get('/todos', getTodos);
 router.post('/', createTodo);
 router.put('/todos/:id', updateTodo);
 router.delete('/todos/:id', deleteTodo);
