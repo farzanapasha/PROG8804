@@ -88,7 +88,7 @@ describe('createTodo', () => {
         const createdTodo = { id: 1, data: 'New todo', done: false };
         ctx.request.body = newTodo;
         supabase.from().insert.mockReturnValue({
-            select: jest.fn().mockResolvedValue({ data: createdTodo, error: null }),
+            select: jest.fn().mockResolvedValue({ data: [createdTodo], error: null }),
         });
 
         // Act
