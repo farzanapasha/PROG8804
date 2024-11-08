@@ -52,21 +52,30 @@ async function createTodo(ctx) {
 async function updateTodo(ctx) {
     try{
         const id = ctx.params.id;
-        const { data, error } = await supabase
+        const { data, error: fetchError } = await supabase
             .from('todos')
-            .update({ data: todo.data, done: todo.done })
+            .select('done')
+            .eq('id', id)
+            .single();
+
+        if (fetchError) {
+            console.error('Error fetching current status:', fetchError);
+            throw new Error("Failed to fetch todo status");
+        }
+        const newStatus = !data.done;
+        
+        const { data: updatedData, error: updateError } = await supabase
+            .from('todos')
+            .update({ done: newStatus })
             .eq('id', id)
             .select()
             ;
-
-        if (error) {
-            ctx.status = 500;
-            ctx.body = { error: error.message };
-            return;
+        if (updateError) {
+            console.error('Error updating status:', updateError);
+            throw new Error("Failed to update todo status");
         }
-
         ctx.status = 200;
-        ctx.body = data;
+        ctx.body = updatedData[0];
     }
     catch (err) {
         ctx.status = 500;   

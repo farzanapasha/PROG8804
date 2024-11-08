@@ -10,6 +10,8 @@ jest.mock('../config/database', () => ({
         insert: jest.fn().mockReturnThis(),
         update: jest.fn().mockReturnThis(),
         delete: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockReturnThis(),
     },
 }));
 
@@ -132,12 +134,17 @@ describe('updateTodo', () => {
 
     it('should update an existing todo', async () => {
         // Arrange
-        const updatedTodo = { id: 1, data: 'Updated todo', done: true };
+        const existingTodo = { id: 1, data: 'Existing todo', done: false };
+        const updatedTodo = { ...existingTodo, done: !existingTodo.done };
         ctx.params.id = 1;
         ctx.request.body = { data: 'Updated todo', done: true };
+        supabase.from().select.mockReturnValue({
+            eq: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({ data: existingTodo, error: null }),
+        });
         supabase.from().update.mockReturnValue({
             eq: jest.fn().mockReturnThis(),
-            select: jest.fn().mockResolvedValue({ data: updatedTodo, error: null }),
+            select: jest.fn().mockResolvedValue({ data: [updatedTodo], error: null }),
         });
 
         // Act
@@ -148,11 +155,32 @@ describe('updateTodo', () => {
         expect(ctx.body).toEqual(updatedTodo);
     });
 
-    it('should handle errors', async () => {
+    it('should handle errors when fetching the current status', async () => {
         // Arrange
         const mockError = new Error('Something went wrong');
         ctx.params.id = 1;
-        ctx.request.body = { data: 'Updated todo', done: true };
+        supabase.from().select.mockReturnValue({
+            eq: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({ data: null, error: mockError }),
+        });
+
+        // Act
+        await updateTodo(ctx);
+
+        // Assert
+        expect(ctx.status).toBe(500);
+        expect(ctx.body).toEqual({ error: 'Failed to fetch todo status' });
+    });
+
+    it('should handle errors when updating the status', async () => {
+        // Arrange
+        const existingTodo = { id: 1, data: 'Existing todo', done: false };
+        const mockError = new Error('Something went wrong');
+        ctx.params.id = 1;
+        supabase.from().select.mockReturnValue({
+            eq: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({ data: existingTodo, error: null }),
+        });
         supabase.from().update.mockReturnValue({
             eq: jest.fn().mockReturnThis(),
             select: jest.fn().mockResolvedValue({ data: null, error: mockError }),
@@ -163,7 +191,7 @@ describe('updateTodo', () => {
 
         // Assert
         expect(ctx.status).toBe(500);
-        expect(ctx.body).toEqual({ error: mockError.message });
+        expect(ctx.body).toEqual({ error: 'Failed to update todo status' });
     });
 });
 
