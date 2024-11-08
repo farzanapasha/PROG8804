@@ -50,7 +50,29 @@ async function createTodo(ctx) {
 }
 
 async function updateTodo(ctx) {
+    try{
+        const id = ctx.params.id;
+        const todo = ctx.request.body;
+        const { data, error } = await supabase
+            .from('todos')
+            .update({ data: todo.data, done: todo.done })
+            .eq('id', id)
+            .select()
+            ;
 
+        if (error) {
+            ctx.status = 500;
+            ctx.body = { error: error.message };
+            return;
+        }
+
+        ctx.status = 200;
+        ctx.body = data;
+    }
+    catch (err) {
+        ctx.status = 500;   
+        ctx.body = { error: err.message };
+    }
 }
 
 async function deleteTodo(ctx) {
