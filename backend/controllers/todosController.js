@@ -8,6 +8,7 @@ async function getTodos(ctx) {
             .limit(10)
             ;
 
+        console.log(data);
         if (error) {
             ctx.status = 500;
             ctx.body = { error: error.message };
@@ -23,14 +24,20 @@ async function getTodos(ctx) {
 }
 
 async function createTodo(ctx) {
-   
+    // const { data, error } = await supabase
+    //     .from('todos')
+    //     .insert([
+    //         { data: 'someValue' },
+    //     ])
+    //     .select()
+
 }
 
-async function updateTodo (ctx) {
+async function updateTodo(ctx) {
 
 }
 
-async function deleteTodo (ctx) {
+async function deleteTodo(ctx) {
 
 }
 
