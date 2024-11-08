@@ -83,7 +83,9 @@ describe('createTodo', () => {
         const newTodo = { data: 'New todo' };
         const createdTodo = { id: 1, data: 'New todo', done: false };
         ctx.request.body = newTodo;
-        supabase.from().insert.mockResolvedValue({ data: [createdTodo], error: null });
+        supabase.from().insert.mockReturnValue({
+            select: jest.fn().mockResolvedValue({ data: createdTodo, error: null }),
+        });
 
         // Act
         await createTodo(ctx);
@@ -98,8 +100,9 @@ describe('createTodo', () => {
         const newTodo = { data: 'New todo' };
         const mockError = new Error('Something went wrong');
         ctx.request.body = newTodo;
-        supabase.from().insert.mockResolvedValue({ data: null, error: mockError });
-
+        supabase.from().insert.mockReturnValue({
+            select: jest.fn().mockResolvedValue({ data: null, error: mockError }),
+        });
         // Act
         await createTodo(ctx);
 
