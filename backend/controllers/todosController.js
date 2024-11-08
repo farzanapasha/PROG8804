@@ -41,7 +41,7 @@ async function createTodo(ctx) {
         }
 
         ctx.status = 201;
-        ctx.body = data;
+        ctx.body = data[0];
     }
     catch (err) {
         ctx.status = 500;   
