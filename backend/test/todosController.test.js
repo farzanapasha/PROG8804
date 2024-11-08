@@ -9,6 +9,7 @@ jest.mock('../config/database', () => ({
         limit: jest.fn().mockReturnThis(),
         insert: jest.fn().mockReturnThis(),
         update: jest.fn().mockReturnThis(),
+        delete: jest.fn().mockReturnThis(),
     },
 }));
 
@@ -159,6 +160,52 @@ describe('updateTodo', () => {
 
         // Act
         await updateTodo(ctx);
+
+        // Assert
+        expect(ctx.status).toBe(500);
+        expect(ctx.body).toEqual({ error: mockError.message });
+    });
+});
+
+
+describe('deleteTodo', () => {
+    let ctx;
+
+    beforeEach(() => {
+        ctx = {
+            status: null,
+            body: null,
+            params: {
+                id: null,
+            },
+        };
+    });
+
+    it('should delete an existing todo', async () => {
+        // Arrange
+        ctx.params.id = 1;
+        supabase.from().delete.mockReturnValue({
+            eq: jest.fn().mockResolvedValue({ data: null, error: null }),
+        });
+
+        // Act
+        await deleteTodo(ctx);
+
+        // Assert
+        expect(ctx.status).toBe(204);
+        expect(ctx.body).toBe(null);
+    });
+
+    it('should handle errors', async () => {
+        // Arrange
+        const mockError = new Error('Something went wrong');
+        ctx.params.id = 1;
+        supabase.from().delete.mockReturnValue({
+            eq: jest.fn().mockResolvedValue({ data: null, error: mockError }),
+        });
+
+        // Act
+        await deleteTodo(ctx);
 
         // Assert
         expect(ctx.status).toBe(500);

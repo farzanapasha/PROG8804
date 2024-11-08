@@ -42,11 +42,11 @@ FN:26,createTodo
 FN:52,updateTodo
 FN:78,deleteTodo
 FNF:4
-FNH:3
+FNH:4
 FNDA:5,getTodos
 FNDA:2,createTodo
 FNDA:2,updateTodo
-FNDA:0,deleteTodo
+FNDA:2,deleteTodo
 DA:1,2
 DA:4,5
 DA:5,5
