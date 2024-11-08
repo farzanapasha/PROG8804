@@ -52,7 +52,6 @@ async function createTodo(ctx) {
 async function updateTodo(ctx) {
     try{
         const id = ctx.params.id;
-        const todo = ctx.request.body;
         const { data, error } = await supabase
             .from('todos')
             .update({ data: todo.data, done: todo.done })
