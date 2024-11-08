@@ -1,4 +1,4 @@
-const { getTodos, createTodo } = require('../controllers/todosController');
+const { getTodos, createTodo, updateTodo, deleteTodo } = require('../controllers/todosController');
 const { supabase } = require('../config/database');
 
 // Mock the database module
@@ -8,6 +8,7 @@ jest.mock('../config/database', () => ({
         select: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
         insert: jest.fn().mockReturnThis(),
+        update: jest.fn().mockReturnThis(),
     },
 }));
 
@@ -105,6 +106,59 @@ describe('createTodo', () => {
         });
         // Act
         await createTodo(ctx);
+
+        // Assert
+        expect(ctx.status).toBe(500);
+        expect(ctx.body).toEqual({ error: mockError.message });
+    });
+});
+
+describe('updateTodo', () => {
+    let ctx;
+
+    beforeEach(() => {
+        ctx = {
+            status: null,
+            body: null,
+            params: {
+                id: null,
+            },
+            request: {
+                body: null,
+            },
+        };
+    });
+
+    it('should update an existing todo', async () => {
+        // Arrange
+        const updatedTodo = { id: 1, data: 'Updated todo', done: true };
+        ctx.params.id = 1;
+        ctx.request.body = { data: 'Updated todo', done: true };
+        supabase.from().update.mockReturnValue({
+            eq: jest.fn().mockReturnThis(),
+            select: jest.fn().mockResolvedValue({ data: updatedTodo, error: null }),
+        });
+
+        // Act
+        await updateTodo(ctx);
+
+        // Assert
+        expect(ctx.status).toBe(200);
+        expect(ctx.body).toEqual(updatedTodo);
+    });
+
+    it('should handle errors', async () => {
+        // Arrange
+        const mockError = new Error('Something went wrong');
+        ctx.params.id = 1;
+        ctx.request.body = { data: 'Updated todo', done: true };
+        supabase.from().update.mockReturnValue({
+            eq: jest.fn().mockReturnThis(),
+            select: jest.fn().mockResolvedValue({ data: null, error: mockError }),
+        });
+
+        // Act
+        await updateTodo(ctx);
 
         // Assert
         expect(ctx.status).toBe(500);
