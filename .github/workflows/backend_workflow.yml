@@ -87,7 +87,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: "Build and Push Container"
-        run: |-
+        run: |- 
           DOCKER_TAG="${{ secrets.DOCKERHUB_USERNAME}}/${{ env.SERVICE }}:${{ github.sha }}"
           cd backend
           docker build --tag "${DOCKER_TAG}" .
@@ -99,6 +99,7 @@ jobs:
         with:
           service: "${{ env.SERVICE }}"
           region: "${{ env.REGION }}"
-          # NOTE: If using a pre-built image, update the image name below:
-
           image: "${{ secrets.DOCKERHUB_USERNAME}}/${{ env.SERVICE }}:${{ github.sha }}"
+          env_vars: |
+            PORT=3004
+          port: 3004
