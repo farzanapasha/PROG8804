@@ -1,6 +1,6 @@
 const app = require('./app');
 const { initializeDatabase } = require('./config/database');
-const port = process.env.PORT || 3004;
+const port = process.env.PORT || 8080;
 
 async function startServer() {
     try {
