@@ -100,6 +100,3 @@ jobs:
           service: "${{ env.SERVICE }}"
           region: "${{ env.REGION }}"
           image: "${{ secrets.DOCKERHUB_USERNAME}}/${{ env.SERVICE }}:${{ github.sha }}"
-          env_vars: |
-            PORT=3004
-          port: 3004
