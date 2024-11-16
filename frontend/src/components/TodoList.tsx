@@ -53,7 +53,7 @@ const TodoList: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ text: newTodo }),
+        body: JSON.stringify({ data: newTodo }),
       });
       if (response.ok) {
         const todo = await response.json();
