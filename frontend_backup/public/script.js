@@ -1,4 +1,5 @@
-const apiUrl = 'http://localhost:3004/api/todos';  // This will route through your ingress
+require('dotenv').config();
+const apiUrl =  process.env.API_URL + '/api/todos';  // This will route through your ingress
 
 async function fetchTodos() {
     try {

@@ -11,9 +11,9 @@ on:
   workflow_dispatch:
 
 env:
-  PROJECT_ID: ${{ secrets.GKE_PROJECT }} # TODO: update to your Google Cloud project ID
-  REGION: "us-central1" # TODO: update to your region
-  SERVICE: "prog8804-backend" # TODO: update to your service name
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }} 
+  REGION: "us-central1" 
+  SERVICE: "prog8804-backend" 
 
 jobs:
   deploy:
