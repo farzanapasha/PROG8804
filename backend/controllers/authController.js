@@ -1,61 +1,64 @@
 const { supabase } = require('../config/database');
 
 async function login(ctx) {
+    const { email, password } = ctx.request.body;
+
+    if (!email || !password) {
+        ctx.status = 400;
+        ctx.body = { error: 'Email and password are required' };
+        return;
+    }
+
     try {
-        const { email, password } = ctx.request.body;
-
-        if (!email || !password) {
-            ctx.status = 400;
-            ctx.body = { error: 'Email and password are required' };
-            return;
-        }
-
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
-            password,
+            password
         });
 
-        if (error) {
-            ctx.status = 401;
-            ctx.body = { error: error.message };
-            return;
-        }
+        if (error) throw error;
 
         ctx.status = 200;
         ctx.body = {
-            user: data.user,
-            token: data.session.access_token
+            token: data.session.access_token,
+            user: {
+                id: data.user.id,
+                email: data.user.email
+            }
         };
-    } catch (err) {
-        ctx.status = 500;
-        ctx.body = { error: err.message };
+    } catch (error) {
+        ctx.status = 401;
+        ctx.body = { error: error.message };
     }
 }
 
 async function logout(ctx) {
     try {
-        const token = ctx.headers.authorization?.split(' ')[1];
-        
-        if (!token) {
-            ctx.status = 401;
-            ctx.body = { error: 'No token provided' };
-            return;
-        }
-
         const { error } = await supabase.auth.signOut();
-
-        if (error) {
-            ctx.status = 500;
-            ctx.body = { error: error.message };
-            return;
-        }
+        if (error) throw error;
 
         ctx.status = 200;
         ctx.body = { message: 'Successfully logged out' };
-    } catch (err) {
+    } catch (error) {
         ctx.status = 500;
-        ctx.body = { error: err.message };
+        ctx.body = { error: error.message };
     }
 }
 
-module.exports = { login, logout };
+async function getCurrentUser(ctx) {
+    // User information is already set by auth middleware
+    const user = ctx.state.user;
+    
+    ctx.status = 200;
+    ctx.body = {
+        user: {
+            id: user.id,
+            email: user.email
+        }
+    };
+}
+
+module.exports = {
+    login,
+    logout,
+    getCurrentUser
+};

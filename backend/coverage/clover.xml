@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1732297912307" clover="3.2.0">
-  <project timestamp="1732297912307" name="All files">
-    <metrics statements="146" coveredstatements="134" conditionals="30" coveredconditionals="30" methods="8" coveredmethods="8" elements="184" coveredelements="172" complexity="0" loc="146" ncloc="146" packages="4" files="10" classes="10"/>
+<coverage generated="1732300366345" clover="3.2.0">
+  <project timestamp="1732300366345" name="All files">
+    <metrics statements="139" coveredstatements="131" conditionals="28" coveredconditionals="28" methods="9" coveredmethods="9" elements="176" coveredelements="168" complexity="0" loc="139" ncloc="139" packages="4" files="10" classes="10"/>
     <package name="backend">
       <metrics statements="17" coveredstatements="17" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
       <file name="app.js" path="D:\DevOps\s1\coverage\project\backend\app.js">
@@ -26,41 +26,33 @@
       </file>
     </package>
     <package name="backend.controllers">
-      <metrics statements="88" coveredstatements="76" conditionals="24" coveredconditionals="24" methods="7" coveredmethods="7"/>
+      <metrics statements="80" coveredstatements="72" conditionals="22" coveredconditionals="22" methods="8" coveredmethods="8"/>
       <file name="authController.js" path="D:\DevOps\s1\coverage\project\backend\controllers\authController.js">
-        <metrics statements="32" coveredstatements="28" conditionals="10" coveredconditionals="10" methods="2" coveredmethods="2"/>
+        <metrics statements="24" coveredstatements="24" conditionals="8" coveredconditionals="8" methods="3" coveredmethods="3"/>
         <line num="1" count="2" type="stmt"/>
         <line num="4" count="6" type="stmt"/>
-        <line num="5" count="6" type="stmt"/>
-        <line num="7" count="6" type="cond" truecount="4" falsecount="0"/>
+        <line num="6" count="6" type="cond" truecount="4" falsecount="0"/>
+        <line num="7" count="2" type="stmt"/>
         <line num="8" count="2" type="stmt"/>
         <line num="9" count="2" type="stmt"/>
-        <line num="10" count="2" type="stmt"/>
+        <line num="12" count="4" type="stmt"/>
         <line num="13" count="4" type="stmt"/>
         <line num="18" count="4" type="cond" truecount="2" falsecount="0"/>
-        <line num="19" count="2" type="stmt"/>
         <line num="20" count="2" type="stmt"/>
         <line num="21" count="2" type="stmt"/>
-        <line num="24" count="2" type="stmt"/>
-        <line num="25" count="2" type="stmt"/>
-        <line num="30" count="0" type="stmt"/>
-        <line num="31" count="0" type="stmt"/>
-        <line num="36" count="4" type="stmt"/>
-        <line num="37" count="4" type="stmt"/>
-        <line num="39" count="4" type="cond" truecount="2" falsecount="0"/>
-        <line num="40" count="1" type="stmt"/>
-        <line num="41" count="1" type="stmt"/>
+        <line num="29" count="2" type="stmt"/>
+        <line num="30" count="2" type="stmt"/>
+        <line num="35" count="3" type="stmt"/>
+        <line num="36" count="3" type="stmt"/>
+        <line num="37" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="39" count="2" type="stmt"/>
+        <line num="40" count="2" type="stmt"/>
         <line num="42" count="1" type="stmt"/>
-        <line num="45" count="3" type="stmt"/>
-        <line num="47" count="3" type="cond" truecount="2" falsecount="0"/>
-        <line num="48" count="1" type="stmt"/>
+        <line num="43" count="1" type="stmt"/>
         <line num="49" count="1" type="stmt"/>
-        <line num="50" count="1" type="stmt"/>
-        <line num="53" count="2" type="stmt"/>
-        <line num="54" count="2" type="stmt"/>
-        <line num="56" count="0" type="stmt"/>
-        <line num="57" count="0" type="stmt"/>
-        <line num="61" count="2" type="stmt"/>
+        <line num="51" count="1" type="stmt"/>
+        <line num="52" count="1" type="stmt"/>
+        <line num="60" count="2" type="stmt"/>
       </file>
       <file name="healthController.js" path="D:\DevOps\s1\coverage\project\backend\controllers\healthController.js">
         <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
@@ -159,16 +151,17 @@
       </file>
     </package>
     <package name="backend.routes">
-      <metrics statements="20" coveredstatements="20" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      <metrics statements="21" coveredstatements="21" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
       <file name="auth.js" path="D:\DevOps\s1\coverage\project\backend\routes\auth.js">
-        <metrics statements="7" coveredstatements="7" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <metrics statements="8" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
         <line num="1" count="1" type="stmt"/>
         <line num="2" count="1" type="stmt"/>
         <line num="3" count="1" type="stmt"/>
         <line num="5" count="1" type="stmt"/>
         <line num="7" count="1" type="stmt"/>
         <line num="8" count="1" type="stmt"/>
-        <line num="10" count="1" type="stmt"/>
+        <line num="9" count="1" type="stmt"/>
+        <line num="11" count="1" type="stmt"/>
       </file>
       <file name="health.js" path="D:\DevOps\s1\coverage\project\backend\routes\health.js">
         <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
