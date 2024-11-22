@@ -15,6 +15,8 @@ jest.mock('../config/database', () => ({
     },
 }));
 
+const mockUserId = '123e4567-e89b-12d3-a456-426614174000';
+
 // Tests for api: getTodos()
 describe('getTodos', () => {
     let ctx;
@@ -23,52 +25,46 @@ describe('getTodos', () => {
         ctx = {
             status: null,
             body: null,
+            state: {
+                user: { id: mockUserId }
+            }
         };
+        jest.clearAllMocks();
     });
 
-    it('should return a list of todos', async () => {
+    it('should return a list of user\'s todos', async () => {
         // Arrange
         const mockTodos = [
-            { id: 1, data: 'Test todo 1', done: false },
-            { id: 2, data: 'Test todo 2', done: true },
+            { id: 1, data: 'Test todo 1', done: false, user_id: mockUserId },
+            { id: 2, data: 'Test todo 2', done: true, user_id: mockUserId },
         ];
-        supabase.from().select().limit.mockResolvedValue({ data: mockTodos, error: null });
+        supabase.from().select().eq().limit.mockResolvedValue({ data: mockTodos, error: null });
 
         // Act
         await getTodos(ctx);
 
         // Assert
+        expect(supabase.from).toHaveBeenCalledWith('todos');
+        expect(supabase.from().select().eq).toHaveBeenCalledWith('user_id', mockUserId);
         expect(ctx.status).toBe(200);
         expect(ctx.body).toEqual(mockTodos);
     });
 
-    it('should handle errors', async () => {
+    it('should handle database errors', async () => {
         // Arrange
-        const mockError = new Error('Something went wrong');
-        supabase.from().select().limit.mockResolvedValue({ data: null, error: mockError });
+        const mockError = new Error('Database error');
+        supabase.from().select().eq().limit.mockResolvedValue({ data: null, error: mockError });
 
         // Act
         await getTodos(ctx);
 
         // Assert
         expect(ctx.status).toBe(500);
-        expect(ctx.body).toEqual({ error: mockError.message });
-    });
-
-    it('should limit the number of todos returned', async () => {
-        // Arrange
-        const mockTodos = Array.from({ length: 10 }, (_, i) => ({ id: i + 1, data: `Test todo ${i + 1}`, done: false }));
-        supabase.from().select().limit.mockResolvedValue({ data: mockTodos, error: null });
-
-        // Act
-        await getTodos(ctx);
-
-        // Assert
-        expect(ctx.status).toBe(200);
-        expect(ctx.body.length).toBeLessThanOrEqual(10);
+        expect(ctx.body.error).toBe(mockError.message);
     });
 });
 
+// Tests for api: createTodo()
 describe('createTodo', () => {
     let ctx;
 
@@ -77,45 +73,54 @@ describe('createTodo', () => {
             status: null,
             body: null,
             request: {
-                body: null,
+                body: { data: 'Test todo', done: false }
             },
+            state: {
+                user: { id: mockUserId }
+            }
         };
+        jest.clearAllMocks();
     });
 
-    it('should create a new todo', async () => {
+    it('should create a new todo for the user', async () => {
         // Arrange
-        const newTodo = { data: 'New todo' };
-        const createdTodo = { id: 1, data: 'New todo', done: false };
-        ctx.request.body = newTodo;
-        supabase.from().insert.mockReturnValue({
-            select: jest.fn().mockResolvedValue({ data: [createdTodo], error: null }),
-        });
+        const mockTodo = { 
+            id: 1, 
+            data: 'Test todo', 
+            done: false,
+            user_id: mockUserId 
+        };
+        supabase.from().insert().select.mockResolvedValue({ data: [mockTodo], error: null });
 
         // Act
         await createTodo(ctx);
 
         // Assert
+        expect(supabase.from).toHaveBeenCalledWith('todos');
+        expect(supabase.from().insert).toHaveBeenCalledWith([{
+            data: 'Test todo',
+            done: false,
+            user_id: mockUserId
+        }]);
         expect(ctx.status).toBe(201);
-        expect(ctx.body).toEqual(createdTodo);
+        expect(ctx.body).toEqual(mockTodo);
     });
 
-    it('should handle errors', async () => {
+    it('should handle database errors when creating todo', async () => {
         // Arrange
-        const newTodo = { data: 'New todo' };
-        const mockError = new Error('Something went wrong');
-        ctx.request.body = newTodo;
-        supabase.from().insert.mockReturnValue({
-            select: jest.fn().mockResolvedValue({ data: null, error: mockError }),
-        });
+        const mockError = new Error('Database error');
+        supabase.from().insert().select.mockResolvedValue({ data: null, error: mockError });
+
         // Act
         await createTodo(ctx);
 
         // Assert
         expect(ctx.status).toBe(500);
-        expect(ctx.body).toEqual({ error: mockError.message });
+        expect(ctx.body.error).toBe(mockError.message);
     });
 });
 
+// Tests for api: updateTodo()
 describe('updateTodo', () => {
     let ctx;
 
@@ -123,45 +128,62 @@ describe('updateTodo', () => {
         ctx = {
             status: null,
             body: null,
-            params: {
-                id: null,
-            },
+            params: { id: '1' },
             request: {
-                body: null,
+                body: { done: true }
             },
+            state: {
+                user: { id: mockUserId }
+            }
         };
+        jest.clearAllMocks();
     });
 
-    it('should update an existing todo', async () => {
+    it('should update user\'s todo', async () => {
         // Arrange
-        const existingTodo = { id: 1, data: 'Existing todo', done: false };
-        const updatedTodo = { ...existingTodo, done: !existingTodo.done };
-        ctx.params.id = 1;
-        ctx.request.body = { data: 'Updated todo', done: true };
-        supabase.from().select.mockReturnValue({
-            eq: jest.fn().mockReturnThis(),
-            single: jest.fn().mockResolvedValue({ data: existingTodo, error: null }),
-        });
-        supabase.from().update.mockReturnValue({
-            eq: jest.fn().mockReturnThis(),
-            select: jest.fn().mockResolvedValue({ data: [updatedTodo], error: null }),
+        const mockUpdatedTodo = { 
+            id: 1, 
+            data: 'Test todo', 
+            done: true,
+            user_id: mockUserId 
+        };
+        supabase.from().update().eq().eq().select.mockResolvedValue({ 
+            data: [mockUpdatedTodo], 
+            error: null 
         });
 
         // Act
         await updateTodo(ctx);
 
         // Assert
+        expect(supabase.from).toHaveBeenCalledWith('todos');
+        expect(supabase.from().update().eq).toHaveBeenCalledWith('id', '1');
+        expect(supabase.from().update().eq().eq).toHaveBeenCalledWith('user_id', mockUserId);
         expect(ctx.status).toBe(200);
-        expect(ctx.body).toEqual(updatedTodo);
+        expect(ctx.body).toEqual(mockUpdatedTodo);
     });
 
-    it('should handle errors when fetching the current status', async () => {
+    it('should return 404 when updating non-existent or unauthorized todo', async () => {
         // Arrange
-        const mockError = new Error('Something went wrong');
-        ctx.params.id = 1;
-        supabase.from().select.mockReturnValue({
-            eq: jest.fn().mockReturnThis(),
-            single: jest.fn().mockResolvedValue({ data: null, error: mockError }),
+        supabase.from().update().eq().eq().select.mockResolvedValue({ 
+            data: [], 
+            error: null 
+        });
+
+        // Act
+        await updateTodo(ctx);
+
+        // Assert
+        expect(ctx.status).toBe(404);
+        expect(ctx.body.error).toBe('Todo not found or unauthorized');
+    });
+
+    it('should handle database errors when updating todo', async () => {
+        // Arrange
+        const mockError = new Error('Database error');
+        supabase.from().update().eq().eq().select.mockResolvedValue({ 
+            data: null, 
+            error: mockError 
         });
 
         // Act
@@ -169,33 +191,11 @@ describe('updateTodo', () => {
 
         // Assert
         expect(ctx.status).toBe(500);
-        expect(ctx.body).toEqual({ error: 'Failed to fetch todo status' });
-    });
-
-    it('should handle errors when updating the status', async () => {
-        // Arrange
-        const existingTodo = { id: 1, data: 'Existing todo', done: false };
-        const mockError = new Error('Something went wrong');
-        ctx.params.id = 1;
-        supabase.from().select.mockReturnValue({
-            eq: jest.fn().mockReturnThis(),
-            single: jest.fn().mockResolvedValue({ data: existingTodo, error: null }),
-        });
-        supabase.from().update.mockReturnValue({
-            eq: jest.fn().mockReturnThis(),
-            select: jest.fn().mockResolvedValue({ data: null, error: mockError }),
-        });
-
-        // Act
-        await updateTodo(ctx);
-
-        // Assert
-        expect(ctx.status).toBe(500);
-        expect(ctx.body).toEqual({ error: 'Failed to update todo status' });
+        expect(ctx.body.error).toBe(mockError.message);
     });
 });
 
-
+// Tests for api: deleteTodo()
 describe('deleteTodo', () => {
     let ctx;
 
@@ -203,40 +203,46 @@ describe('deleteTodo', () => {
         ctx = {
             status: null,
             body: null,
-            params: {
-                id: null,
-            },
+            params: { id: '1' },
+            state: {
+                user: { id: mockUserId }
+            }
         };
+        jest.clearAllMocks();
     });
 
-    it('should delete an existing todo', async () => {
+    it('should delete user\'s todo', async () => {
         // Arrange
-        ctx.params.id = 1;
         supabase.from().delete.mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ data: null, error: null }),
+            eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockResolvedValue({ error: null })
+            })
         });
 
         // Act
         await deleteTodo(ctx);
 
         // Assert
+        expect(supabase.from).toHaveBeenCalledWith('todos');
+        expect(supabase.from().delete().eq).toHaveBeenCalledWith('id', '1');
+        expect(supabase.from().delete().eq().eq).toHaveBeenCalledWith('user_id', mockUserId);
         expect(ctx.status).toBe(204);
-        expect(ctx.body).toBe(null);
     });
 
-    it('should handle errors', async () => {
+    it('should handle database errors when deleting todo', async () => {
         // Arrange
-        const mockError = new Error('Something went wrong');
-        ctx.params.id = 1;
+        const mockError = new Error('Database error');
         supabase.from().delete.mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ data: null, error: mockError }),
+            eq: jest.fn().mockReturnValue({
+                eq: jest.fn().mockResolvedValue({ error: mockError })
+            })
         });
-
+        
         // Act
         await deleteTodo(ctx);
 
         // Assert
         expect(ctx.status).toBe(500);
-        expect(ctx.body).toEqual({ error: mockError.message });
+        expect(ctx.body.error).toBe(mockError.message);
     });
 });

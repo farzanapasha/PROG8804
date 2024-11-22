@@ -3,9 +3,9 @@ const { getTodos, createTodo, updateTodo, deleteTodo } = require('../controllers
 
 const router = new Router();
 
-router.get('/todos', getTodos);
-router.post('/todos', createTodo);
-router.put('/todos/:id', updateTodo);
-router.delete('/todos/:id', deleteTodo);
+router.get('/', getTodos);
+router.post('/', createTodo);
+router.put('/:id', updateTodo);
+router.delete('/:id', deleteTodo);
 
 module.exports = router;

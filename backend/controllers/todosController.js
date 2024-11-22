@@ -2,13 +2,13 @@ const { supabase } = require('../config/database');
 
 async function getTodos(ctx) {
     try {
+        const userId = ctx.state.user.id;
         const { data, error } = await supabase
             .from('todos')
             .select('*')
-            .limit(10)
-            ;
+            .eq('user_id', userId)
+            .limit(10);
 
-        console.log(data);
         if (error) {
             ctx.status = 500;
             ctx.body = { error: error.message };
@@ -24,15 +24,19 @@ async function getTodos(ctx) {
 }
 
 async function createTodo(ctx) {
-    try{
-        todo = ctx.request.body;
+    try {
+        const userId = ctx.state.user.id;
+        const todo = ctx.request.body;
         const { data, error } = await supabase
             .from('todos')
             .insert([
-                { data: todo.data, done: todo.done|| false }
+                { 
+                    data: todo.data, 
+                    done: todo.done || false,
+                    user_id: userId 
+                }
             ])
-            .select()
-            ;
+            .select();
 
         if (error) {
             ctx.status = 500;
@@ -42,56 +46,55 @@ async function createTodo(ctx) {
 
         ctx.status = 201;
         ctx.body = data[0];
-    }
-    catch (err) {
+    } catch (err) {
         ctx.status = 500;   
         ctx.body = { error: err.message };
     }
 }
 
 async function updateTodo(ctx) {
-    try{
-        const id = ctx.params.id;
-        const { data, error: fetchError } = await supabase
-            .from('todos')
-            .select('done')
-            .eq('id', id)
-            .single();
-
-        if (fetchError) {
-            console.error('Error fetching current status:', fetchError);
-            throw new Error("Failed to fetch todo status");
-        }
-        const newStatus = !data.done;
+    try {
+        const userId = ctx.state.user.id;
+        const todoId = ctx.params.id;
+        const updates = ctx.request.body;
         
-        const { data: updatedData, error: updateError } = await supabase
+        const { data, error } = await supabase
             .from('todos')
-            .update({ done: newStatus })
-            .eq('id', id)
-            .select()
-            ;
-        if (updateError) {
-            console.error('Error updating status:', updateError);
-            throw new Error("Failed to update todo status");
+            .update(updates)
+            .eq('id', todoId)
+            .eq('user_id', userId)
+            .select();
+
+        if (error) {
+            ctx.status = 500;
+            ctx.body = { error: error.message };
+            return;
         }
+
+        if (!data || data.length === 0) {
+            ctx.status = 404;
+            ctx.body = { error: 'Todo not found or unauthorized' };
+            return;
+        }
+
         ctx.status = 200;
-        ctx.body = updatedData[0];
-    }
-    catch (err) {
-        ctx.status = 500;   
+        ctx.body = data[0];
+    } catch (err) {
+        ctx.status = 500;
         ctx.body = { error: err.message };
     }
 }
 
 async function deleteTodo(ctx) {
-
-    try{
-        const id = ctx.params.id;
-        const { data, error } = await supabase
+    try {
+        const userId = ctx.state.user.id;
+        const todoId = ctx.params.id;
+        
+        const { error } = await supabase
             .from('todos')
             .delete()
-            .eq('id', id)
-            ;
+            .eq('id', todoId)
+            .eq('user_id', userId);
 
         if (error) {
             ctx.status = 500;
@@ -100,10 +103,8 @@ async function deleteTodo(ctx) {
         }
 
         ctx.status = 204;
-        ctx.body = data;
-    }
-    catch (err) {
-        ctx.status = 500;   
+    } catch (err) {
+        ctx.status = 500;
         ctx.body = { error: err.message };
     }
 }
