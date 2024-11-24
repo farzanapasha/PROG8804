@@ -48,8 +48,11 @@ describe('Authentication', () => {
             // Assert
             expect(response.status).toBe(200);
             expect(response.body).toEqual({
-                user: mockUser,
-                token: mockToken
+                token: mockToken,
+                user: {
+                    id: mockUser.id,
+                    email: mockUser.email
+                }
             });
         });
 
@@ -61,14 +64,15 @@ describe('Authentication', () => {
 
             // Assert
             expect(response.status).toBe(400);
-            expect(response.body.error).toBe('Email and password are required');
+            expect(response.body.status).toBe('fail');
+            expect(response.body.message).toBe('Email and password are required');
         });
 
         it('should return 401 for invalid credentials', async () => {
             // Arrange
             supabase.auth.signInWithPassword.mockResolvedValue({
                 data: null,
-                error: { message: 'Invalid login credentials' }
+                error: { message: 'Authentication failed' }
             });
 
             // Act
@@ -78,7 +82,8 @@ describe('Authentication', () => {
 
             // Assert
             expect(response.status).toBe(401);
-            expect(response.body.error).toBe('Invalid login credentials');
+            expect(response.body.status).toBe('fail');
+            expect(response.body.message).toBe('Authentication failed');
         });
     });
 
@@ -105,7 +110,8 @@ describe('Authentication', () => {
 
             // Assert
             expect(response.status).toBe(401);
-            expect(response.body.error).toBe('No token provided');
+            expect(response.body.status).toBe('fail');
+            expect(response.body.message).toBe('No token provided');
         });
     });
 });
@@ -142,7 +148,26 @@ describe('Todos API', () => {
 
             // Assert
             expect(response.status).toBe(401);
-            expect(response.body.error).toBe('No token provided');
+            expect(response.body.status).toBe('fail');
+            expect(response.body.message).toBe('No token provided');
+        });
+
+        it('should handle database errors', async () => {
+            // Arrange
+            supabase.from().select().eq().limit.mockResolvedValue({ 
+                data: null, 
+                error: { message: 'Database error' }
+            });
+
+            // Act
+            const response = await request(app.callback())
+                .get('/api/todos')
+                .set('Authorization', `Bearer ${mockToken}`);
+
+            // Assert
+            expect(response.status).toBe(500);
+            expect(response.body.status).toBe('error');
+            expect(response.body.message).toBe('Database error');
         });
     });
 
@@ -165,6 +190,27 @@ describe('Todos API', () => {
             // Assert
             expect(response.status).toBe(201);
             expect(response.body).toEqual(createdTodo);
+        });
+
+        it('should handle database errors when creating todo', async () => {
+            // Arrange
+            supabase.from().insert.mockReturnValue({
+                select: jest.fn().mockResolvedValue({ 
+                    data: null, 
+                    error: { message: 'Database error' }
+                })
+            });
+
+            // Act
+            const response = await request(app.callback())
+                .post('/api/todos')
+                .set('Authorization', `Bearer ${mockToken}`)
+                .send({ data: 'New todo' });
+
+            // Assert
+            expect(response.status).toBe(500);
+            expect(response.body.status).toBe('error');
+            expect(response.body.message).toBe('Database error');
         });
     });
 
@@ -194,7 +240,7 @@ describe('Todos API', () => {
             expect(response.body).toEqual(updatedTodo);
         });
 
-        it('should return 404 for non-existent or unauthorized todo', async () => {
+        it('should return 404 when updating non-existent todo', async () => {
             // Arrange
             supabase.from().update.mockReturnValue({
                 eq: jest.fn().mockReturnValue({
@@ -212,7 +258,8 @@ describe('Todos API', () => {
 
             // Assert
             expect(response.status).toBe(404);
-            expect(response.body.error).toBe('Todo not found or unauthorized');
+            expect(response.body.status).toBe('fail');
+            expect(response.body.message).toBe('Todo not found or unauthorized');
         });
     });
 
@@ -232,6 +279,27 @@ describe('Todos API', () => {
 
             // Assert
             expect(response.status).toBe(204);
+        });
+
+        it('should handle database errors when deleting todo', async () => {
+            // Arrange
+            supabase.from().delete.mockReturnValue({
+                eq: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockResolvedValue({ 
+                        error: { message: 'Database error' }
+                    })
+                })
+            });
+
+            // Act
+            const response = await request(app.callback())
+                .delete('/api/todos/1')
+                .set('Authorization', `Bearer ${mockToken}`);
+
+            // Assert
+            expect(response.status).toBe(500);
+            expect(response.body.status).toBe('error');
+            expect(response.body.message).toBe('Database error');
         });
     });
 });

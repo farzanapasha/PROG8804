@@ -1,5 +1,6 @@
 const { login, logout, getCurrentUser } = require('../controllers/authController');
 const { supabase } = require('../config/database');
+const { AppError } = require('../middlewares/errorHandler');
 
 // Mock the database module
 jest.mock('../config/database', () => ({
@@ -50,24 +51,21 @@ describe('Auth Controller', () => {
             // Assert
             expect(ctx.status).toBe(200);
             expect(ctx.body).toEqual({
+                token: mockToken,
                 user: {
                     id: mockUser.id,
                     email: mockUser.email
-                },
-                token: mockToken
+                }
             });
         });
 
-        it('should return 400 for missing credentials', async () => {
-            // Act
-            await login(ctx);
-
-            // Assert
-            expect(ctx.status).toBe(400);
-            expect(ctx.body.error).toBe('Email and password are required');
+        it('should throw AppError for missing credentials', async () => {
+            // Act & Assert
+            await expect(login(ctx)).rejects.toThrow(AppError);
+            await expect(login(ctx)).rejects.toThrow('Email and password are required');
         });
 
-        it('should return 401 for invalid credentials', async () => {
+        it('should throw AppError for invalid credentials', async () => {
             // Arrange
             ctx.request.body = {
                 email: 'test@example.com',
@@ -75,22 +73,19 @@ describe('Auth Controller', () => {
             };
             supabase.auth.signInWithPassword.mockResolvedValue({
                 data: null,
-                error: new Error('Invalid login credentials')
+                error: new Error('Authentication failed')
             });
 
-            // Act
-            await login(ctx);
-
-            // Assert
-            expect(ctx.status).toBe(401);
-            expect(ctx.body.error).toBe('Invalid login credentials');
+            // Act & Assert
+            await expect(login(ctx)).rejects.toThrow(AppError);
+            await expect(login(ctx)).rejects.toThrow('Authentication failed');
         });
     });
 
     describe('logout', () => {
         it('should successfully logout', async () => {
             // Arrange
-            ctx.state.user = mockUser; // User set by auth middleware
+            ctx.state.user = mockUser;
             supabase.auth.signOut.mockResolvedValue({ error: null });
 
             // Act
@@ -101,19 +96,16 @@ describe('Auth Controller', () => {
             expect(ctx.body.message).toBe('Successfully logged out');
         });
 
-        it('should handle logout errors', async () => {
+        it('should throw AppError when logout fails', async () => {
             // Arrange
             ctx.state.user = mockUser;
             supabase.auth.signOut.mockResolvedValue({
                 error: new Error('Logout failed')
             });
 
-            // Act
-            await logout(ctx);
-
-            // Assert
-            expect(ctx.status).toBe(500);
-            expect(ctx.body.error).toBe('Logout failed');
+            // Act & Assert
+            await expect(logout(ctx)).rejects.toThrow(AppError);
+            await expect(logout(ctx)).rejects.toThrow('Logout failed');
         });
     });
 
@@ -128,10 +120,8 @@ describe('Auth Controller', () => {
             // Assert
             expect(ctx.status).toBe(200);
             expect(ctx.body).toEqual({
-                user: {
-                    id: mockUser.id,
-                    email: mockUser.email
-                }
+                id: mockUser.id,
+                email: mockUser.email
             });
         });
     });

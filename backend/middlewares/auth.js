@@ -1,28 +1,27 @@
 const { supabase } = require('../config/database');
+const { AppError } = require('./errorHandler');
 
 async function auth(ctx, next) {
     const token = ctx.headers.authorization?.split(' ')[1];
     
     if (!token) {
-        ctx.status = 401;
-        ctx.body = { error: 'No token provided' };
-        return;
+        throw new AppError('No token provided', 401);
     }
 
     try {
         const { data: { user }, error } = await supabase.auth.getUser(token);
         
         if (error || !user) {
-            ctx.status = 401;
-            ctx.body = { error: 'Invalid token' };
-            return;
+            throw new AppError('Invalid token', 401);
         }
 
         ctx.state.user = user;
         await next();
     } catch (err) {
-        ctx.status = 401;
-        ctx.body = { error: 'Authentication failed' };
+        if (err instanceof AppError) {
+            throw err;
+        }
+        throw new AppError('Authentication failed', 401);
     }
 }
 

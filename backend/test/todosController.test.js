@@ -1,5 +1,6 @@
 const { getTodos, createTodo, updateTodo, deleteTodo } = require('../controllers/todosController');
 const { supabase } = require('../config/database');
+const { AppError } = require('../middlewares/errorHandler');
 
 // Mock the database module
 jest.mock('../config/database', () => ({
@@ -52,15 +53,12 @@ describe('getTodos', () => {
 
     it('should handle database errors', async () => {
         // Arrange
-        const mockError = new Error('Database error');
+        const mockError = { message: 'Database error' };
         supabase.from().select().eq().limit.mockResolvedValue({ data: null, error: mockError });
 
-        // Act
-        await getTodos(ctx);
-
-        // Assert
-        expect(ctx.status).toBe(500);
-        expect(ctx.body.error).toBe(mockError.message);
+        // Act & Assert
+        await expect(getTodos(ctx)).rejects.toThrow(AppError);
+        await expect(getTodos(ctx)).rejects.toThrow('Database error');
     });
 });
 
@@ -108,15 +106,12 @@ describe('createTodo', () => {
 
     it('should handle database errors when creating todo', async () => {
         // Arrange
-        const mockError = new Error('Database error');
+        const mockError = { message: 'Database error' };
         supabase.from().insert().select.mockResolvedValue({ data: null, error: mockError });
 
-        // Act
-        await createTodo(ctx);
-
-        // Assert
-        expect(ctx.status).toBe(500);
-        expect(ctx.body.error).toBe(mockError.message);
+        // Act & Assert
+        await expect(createTodo(ctx)).rejects.toThrow(AppError);
+        await expect(createTodo(ctx)).rejects.toThrow('Database error');
     });
 });
 
@@ -165,33 +160,23 @@ describe('updateTodo', () => {
 
     it('should return 404 when updating non-existent or unauthorized todo', async () => {
         // Arrange
-        supabase.from().update().eq().eq().select.mockResolvedValue({ 
-            data: [], 
-            error: null 
-        });
+        const mockError = { message: 'Todo not found or unauthorized', statusCode: 404};
+        supabase.from().update().eq().eq().select.mockResolvedValue({ data: null, error: mockError });
 
-        // Act
-        await updateTodo(ctx);
-
-        // Assert
-        expect(ctx.status).toBe(404);
-        expect(ctx.body.error).toBe('Todo not found or unauthorized');
+        // Act & Assert
+        await expect(updateTodo(ctx)).rejects.toThrow(AppError);
+        await expect(updateTodo(ctx)).rejects.toThrow('Todo not found or unauthorized');
     });
 
     it('should handle database errors when updating todo', async () => {
         // Arrange
-        const mockError = new Error('Database error');
-        supabase.from().update().eq().eq().select.mockResolvedValue({ 
-            data: null, 
-            error: mockError 
-        });
+        const mockError = { message: 'Database error' };
+        supabase.from().insert().select.mockResolvedValue({ data: null, error: mockError });
 
-        // Act
-        await updateTodo(ctx);
+        // Act & Assert
+        await expect(updateTodo(ctx)).rejects.toThrow(AppError);
+        await expect(updateTodo(ctx)).rejects.toThrow('Database error');
 
-        // Assert
-        expect(ctx.status).toBe(500);
-        expect(ctx.body.error).toBe(mockError.message);
     });
 });
 
@@ -231,18 +216,15 @@ describe('deleteTodo', () => {
 
     it('should handle database errors when deleting todo', async () => {
         // Arrange
-        const mockError = new Error('Database error');
+        const mockError = { message: 'Database error' };
         supabase.from().delete.mockReturnValue({
             eq: jest.fn().mockReturnValue({
                 eq: jest.fn().mockResolvedValue({ error: mockError })
             })
         });
-        
-        // Act
-        await deleteTodo(ctx);
 
-        // Assert
-        expect(ctx.status).toBe(500);
-        expect(ctx.body.error).toBe(mockError.message);
+        // Act & Assert
+        await expect(deleteTodo(ctx)).rejects.toThrow(AppError);
+        await expect(deleteTodo(ctx)).rejects.toThrow('Database error');
     });
 });

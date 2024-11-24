@@ -1,47 +1,41 @@
 const { supabase } = require('../config/database');
+const { AppError } = require('../middlewares/errorHandler');
 
 async function login(ctx) {
     const { email, password } = ctx.request.body;
 
     if (!email || !password) {
-        ctx.status = 400;
-        ctx.body = { error: 'Email and password are required' };
-        return;
+        throw new AppError('Email and password are required', 400);
     }
 
-    try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password
-        });
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+    });
 
-        if (error) throw error;
-
-        ctx.status = 200;
-        ctx.body = {
-            token: data.session.access_token,
-            user: {
-                id: data.user.id,
-                email: data.user.email
-            }
-        };
-    } catch (error) {
-        ctx.status = 401;
-        ctx.body = { error: error.message };
+    if (error) {
+        throw new AppError('Authentication failed', 401);
     }
+
+    ctx.status = 200;
+    ctx.body = {
+        token: data.session.access_token,
+        user: {
+            id: data.user.id,
+            email: data.user.email
+        }
+    };
+
 }
 
 async function logout(ctx) {
-    try {
         const { error } = await supabase.auth.signOut();
-        if (error) throw error;
+        if (error) {
+            throw new AppError('Logout failed', 500);
+        }
 
         ctx.status = 200;
         ctx.body = { message: 'Successfully logged out' };
-    } catch (error) {
-        ctx.status = 500;
-        ctx.body = { error: error.message };
-    }
 }
 
 async function getCurrentUser(ctx) {
@@ -50,10 +44,8 @@ async function getCurrentUser(ctx) {
     
     ctx.status = 200;
     ctx.body = {
-        user: {
-            id: user.id,
-            email: user.email
-        }
+        id: user.id,
+        email: user.email
     };
 }
 

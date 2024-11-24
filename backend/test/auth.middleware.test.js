@@ -1,5 +1,6 @@
 const auth = require('../middlewares/auth');
 const { supabase } = require('../config/database');
+const { AppError } = require('../middlewares/errorHandler');
 
 jest.mock('../config/database', () => ({
     supabase: {
@@ -18,8 +19,6 @@ describe('Auth Middleware', () => {
     beforeEach(() => {
         ctx = {
             headers: {},
-            status: null,
-            body: null,
             state: {}
         };
         next = jest.fn();
@@ -38,72 +37,55 @@ describe('Auth Middleware', () => {
         expect(supabase.auth.getUser).toHaveBeenCalledWith(mockToken);
         expect(ctx.state.user).toEqual(mockUser);
         expect(next).toHaveBeenCalled();
-        expect(ctx.status).toBeNull();
-        expect(ctx.body).toBeNull();
     });
 
-    it('should return 401 when no token is provided', async () => {
-        // Act
-        await auth(ctx, next);
-
-        // Assert
-        expect(ctx.status).toBe(401);
-        expect(ctx.body).toEqual({ error: 'No token provided' });
+    it('should throw AppError when no token is provided', async () => {
+        // Act & Assert
+        await expect(auth(ctx, next)).rejects.toThrow(AppError);
+        await expect(auth(ctx, next)).rejects.toThrow('No token provided');
         expect(next).not.toHaveBeenCalled();
     });
 
-    it('should return 401 when token is invalid', async () => {
+    it('should throw AppError when token is invalid', async () => {
         // Arrange
         ctx.headers.authorization = `Bearer invalid-token`;
         supabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: new Error('Invalid token') });
 
-        // Act
-        await auth(ctx, next);
-
-        // Assert
-        expect(ctx.status).toBe(401);
-        expect(ctx.body).toEqual({ error: 'Invalid token' });
+        // Act & Assert
+        await expect(auth(ctx, next)).rejects.toThrow(AppError);
+        await expect(auth(ctx, next)).rejects.toThrow('Invalid token');
         expect(next).not.toHaveBeenCalled();
     });
 
-    it('should return 401 when Supabase throws an error', async () => {
+    it('should throw AppError when Supabase throws an error', async () => {
         // Arrange
         ctx.headers.authorization = `Bearer ${mockToken}`;
         supabase.auth.getUser.mockRejectedValue(new Error('Supabase error'));
 
-        // Act
-        await auth(ctx, next);
-
-        // Assert
-        expect(ctx.status).toBe(401);
-        expect(ctx.body).toEqual({ error: 'Authentication failed' });
+        // Act & Assert
+        await expect(auth(ctx, next)).rejects.toThrow(AppError);
+        await expect(auth(ctx, next)).rejects.toThrow('Authentication failed');
         expect(next).not.toHaveBeenCalled();
     });
 
-    it('should handle malformed authorization header', async () => {
+    it('should throw AppError for malformed authorization header', async () => {
         // Arrange
         ctx.headers.authorization = 'malformed-header';
 
-        // Act
-        await auth(ctx, next);
-
-        // Assert
-        expect(ctx.status).toBe(401);
-        expect(ctx.body).toEqual({ error: 'No token provided' });
+        // Act & Assert
+        await expect(auth(ctx, next)).rejects.toThrow(AppError);
+        await expect(auth(ctx, next)).rejects.toThrow('No token provided');
         expect(next).not.toHaveBeenCalled();
     });
 
-    it('should return 401 when user is not found', async () => {
+    it('should throw AppError when user is not found', async () => {
         // Arrange
         ctx.headers.authorization = `Bearer ${mockToken}`;
         supabase.auth.getUser.mockResolvedValue({ data: {}, error: null });
 
-        // Act
-        await auth(ctx, next);
-
-        // Assert
-        expect(ctx.status).toBe(401);
-        expect(ctx.body).toEqual({ error: 'Invalid token' });
+        // Act & Assert
+        await expect(auth(ctx, next)).rejects.toThrow(AppError);
+        await expect(auth(ctx, next)).rejects.toThrow('Invalid token');
         expect(next).not.toHaveBeenCalled();
     });
 });

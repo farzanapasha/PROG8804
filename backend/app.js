@@ -6,10 +6,12 @@ const auth = require('./middlewares/auth');
 const todosRoutes = require('./routes/todos');
 const authRoutes = require('./routes/auth');
 const healthRoutes = require('./routes/health');
+const { errorHandler } = require('./middlewares/errorHandler');
 
 const app = new Koa();
 const router = new Router();
 
+app.use(errorHandler);
 app.use(bodyParser);
 app.use(cors);
 
@@ -21,5 +23,6 @@ router.use('/healthz', healthRoutes.routes(), healthRoutes.allowedMethods());
 router.use('/api/todos', auth, todosRoutes.routes(), todosRoutes.allowedMethods());
 
 app.use(router.routes()).use(router.allowedMethods());
+
 
 module.exports = app;

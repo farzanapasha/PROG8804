@@ -4,15 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon index.js",
-    "start": "node index.js",
-    "test": "jest --coverage"
+    "dev": "cross-env nodemon index.js NODE_ENV=development",
+    "start": "cross-env node index.js NODE_ENV=production",
+    "test": "cross-env jest --coverage --verbose"
   },
   "dependencies": {
     "@koa/cors": "^5.0.0",
     "@koa/router": "^13.0.0",
     "@supabase/supabase-js": "^2.46.1",
     "axios": "^1.7.7",
+    "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
     "koa": "^2.11.0",
     "koa-bodyparser": "^4.4.1",
