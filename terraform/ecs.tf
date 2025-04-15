@@ -31,7 +31,7 @@ resource "aws_ecs_service" "final-service-backend" {
 resource "aws_ecs_task_definition" "final-task-definition-backend" {
   container_definitions = jsonencode([
     {
-      name : "final-container",
+      name : "final-backend-container",
       image : "${aws_ecr_repository.final-repo.repository_url}",
       essential : true,
       portMappings : [
