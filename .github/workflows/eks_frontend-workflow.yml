@@ -1,4 +1,4 @@
-name: Frontend Build and Deploy Docker Image to ECR
+name: Frontend Build and Deploy 
 
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
 
     - name: Run unit test
       run: |
-        cd backend
+        cd frontend
         npm install
         npm test
 
@@ -30,7 +30,7 @@ jobs:
       run: |
         cd frontend
         npm run build
-	ls 
+        ls
 
     - name: Push build files to S3 bucket
       run: |
