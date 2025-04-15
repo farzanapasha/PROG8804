@@ -1,4 +1,4 @@
-name: Build and Deploy Docker Image to ECR
+name: Frontend Build and Deploy Docker Image to ECR
 
 on:
   push:
