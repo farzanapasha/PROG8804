@@ -3,7 +3,6 @@ name: Frontend Build and Deploy Docker Image to ECR
 on:
   push:
     branches: [main]
-    paths:
 
 env:
   AWS_REGION: us-east-1
@@ -21,19 +20,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set image tag using commit SHA
-      run: echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        role-to-assume: "arn:aws:iam::480429191117:role/GitHubActionsECRPushRole"
-        aws-region: ${{ env.AWS_REGION }}
-
-    - name: Log in to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2
-
     - name: Run unit test
       run: |
         cd backend
@@ -42,16 +28,11 @@ jobs:
 
     - name: Build Docker image
       run: |
-        cd backend
-        docker build -t $ECR_REPO:${{ env.IMAGE_TAG }} .
+        cd frontend
+        npm run build
+	ls 
 
-    - name: Tag image with ECR URI
+    - name: Push build files to S3 bucket
       run: |
-        ECR_REGISTRY=$(aws sts get-caller-identity --query "Account" --output text).dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
-        docker tag $ECR_REPO:${{ env.IMAGE_TAG }} $ECR_REGISTRY/$ECR_REPO:${{ env.IMAGE_TAG }}
-        echo "ECR_REGISTRY=$ECR_REGISTRY" >> $GITHUB_ENV
-
-    - name: Push Docker image to ECR
-      run: |
-        docker push $ECR_REGISTRY/$ECR_REPO:${{ env.IMAGE_TAG }}
+        aws s3 cp build/ s3://frontend-app-1103736086 --recursive
 
