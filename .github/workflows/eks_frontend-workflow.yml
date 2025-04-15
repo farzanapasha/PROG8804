@@ -23,7 +23,7 @@ jobs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        role-to-assume: "arn:aws:iam::480429191117:role/GitHubActionsECRPushRole"
+        role-to-assume: "arn:aws:iam::480429191117:role/FjahGitHubActionsECRPushRole"
         aws-region: ${{ env.AWS_REGION }}
 
     - name: Run unit test
