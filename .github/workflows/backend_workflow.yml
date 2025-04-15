@@ -1,19 +1,24 @@
 
-name: "Build and Deploy Backend to Cloud Run"
+name: "Build and Deploy Backend to Amazon ECS"
 
 on:
   push:
     branches:
-      - main
+      - prod_8860
     paths:
       - "backend/**"
       - ".github/workflows/backend_workflow.yml"
   workflow_dispatch:
 
 env:
-  PROJECT_ID: ${{ secrets.GKE_PROJECT }} 
-  REGION: "us-central1" 
-  SERVICE: "prog8804-backend" 
+  AWS_REGION: "ap-southeast-1"                   # set this to your preferred AWS region, e.g. us-west-1
+  ECR_REPOSITORY: "prog8860"           # set this to your Amazon ECR repository name
+  ECS_SERVICE: "MyProjectService"                 # set this to your Amazon ECS service name
+  ECS_CLUSTER: "MyProjectCluster"                 # set this to your Amazon ECS cluster name
+  ECS_TASK_DEFINITION: "prog8860-backend" # set this to the path to your Amazon ECS task definition
+                                               # file, e.g. .aws/task-definition.json
+  CONTAINER_NAME: backend-container           # set this to the name of the container in the
+                                         # containerDefinitions section of your task definition
 
 jobs:
   deploy:
@@ -25,7 +30,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332" # actions/checkout@v4
+        uses: "actions/checkout@v4"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4.0.2
@@ -42,36 +47,43 @@ jobs:
           cd backend
           npm run test
 
-      # Configure Workload Identity Federation and generate an access token.
-      - id: "auth"
-        name: "Authenticate to Google Cloud"
-        uses: "google-github-actions/auth@f112390a2df9932162083945e46d439060d66ec2" # google-github-actions/auth@v2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          credentials_json: ${{ secrets.GKE_SA_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      # BEGIN - Docker auth and build
-      #
-      # If you already have a container image, you can omit these steps.
-      - name: "Docker Auth"
-        uses: "docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567" # docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
-      - name: "Build and Push Container"
-        run: |- 
-          DOCKER_TAG="${{ secrets.DOCKERHUB_USERNAME}}/${{ env.SERVICE }}:${{ github.sha }}"
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build a docker container and
+          # push it to ECR so that it can
+          # be deployed to ECS.
           cd backend
-          docker build --tag "${DOCKER_TAG}" .
-          docker push "${DOCKER_TAG}"
-
-      # END - Docker auth and build
-      - name: "Deploy to Cloud Run"
-        uses: "google-github-actions/deploy-cloudrun@33553064113a37d688aa6937bacbdc481580be17" # google-github-actions/deploy-cloudrun@v2
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+  
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          service: "${{ env.SERVICE }}"
-          region: "${{ env.REGION }}"
-          image: "${{ secrets.DOCKERHUB_USERNAME}}/${{ env.SERVICE }}:${{ github.sha }}"
-          env_vars: |
-            SUPABASE_URL=${{ secrets.SUPABASE_URL }}
-            SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+  
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
