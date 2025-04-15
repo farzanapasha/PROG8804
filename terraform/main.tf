@@ -89,6 +89,14 @@ resource "aws_iam_role_policy" "github_actions_ecr_policy" {
           "ecr:PutImage"
         ],
         Resource = "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/${each.key}"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:PutObject",
+          "s3:PutObjectAcl"
+        ],
+        Resource = "arn:aws:s3:::frontend-app-1103736086/*"
       }
     ]
   })
