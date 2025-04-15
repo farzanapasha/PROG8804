@@ -15,7 +15,7 @@ env:
   ECR_REPOSITORY: "prog8860"           # set this to your Amazon ECR repository name
   ECS_SERVICE: "MyProjectService"                 # set this to your Amazon ECS service name
   ECS_CLUSTER: "MyProjectCluster"                 # set this to your Amazon ECS cluster name
-  ECS_TASK_DEFINITION: "prog8860-backend" # set this to the path to your Amazon ECS task definition
+  ECS_TASK_DEFINITION: ".aws/prog8860-backend.json" # set this to the path to your Amazon ECS task definition
                                                # file, e.g. .aws/task-definition.json
   CONTAINER_NAME: backend-container           # set this to the name of the container in the
                                          # containerDefinitions section of your task definition
@@ -57,6 +57,11 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Download task definition
+        run: |
+          aws ecs describe-task-definition --task-definition prog8860-backend \
+          --query taskDefinition --output json > ${{ env.ECS_TASK_DEFINITION }}
 
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
