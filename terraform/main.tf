@@ -97,6 +97,13 @@ resource "aws_iam_role_policy" "github_actions_ecr_policy" {
           "s3:PutObjectAcl"
         ],
         Resource = "arn:aws:s3:::frontend-app-1103736086/*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "eks:DescribeCluster"
+        ],
+        Resource = "*"
       }
     ]
   })
