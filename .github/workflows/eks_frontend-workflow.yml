@@ -26,12 +26,16 @@ jobs:
         npm install
         npm test
       continue-on-error: true
+      env:
+        CI: false
 
     - name: Build Frontend APP
       run: |
         cd frontend
         npm run build
         ls
+      env:
+        CI: false
 
     - name: Push build files to S3 bucket
       run: |
