@@ -60,6 +60,7 @@ jobs:
 
       - name: Download task definition
         run: |
+          mkdir -p .aws
           aws ecs describe-task-definition --task-definition prog8860-backend \
           --query taskDefinition --output json > ${{ env.ECS_TASK_DEFINITION }}
 
