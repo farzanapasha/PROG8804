@@ -6,7 +6,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPO: capstone
+  ECR_REPO: backend
   IMAGE_TAG: latest
 
 jobs:
