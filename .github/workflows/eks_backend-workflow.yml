@@ -34,6 +34,7 @@ jobs:
     - name: Run unit test
       run: |
         cd backend
+        npm install 
         npm test
 
     - name: Build Docker image
