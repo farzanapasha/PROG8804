@@ -4,11 +4,11 @@ on:
   push:
     branches: [main]
     paths:
-      - 'backend/**'
+      - 'frontend/**'
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPO: backend
+  ECR_REPO: frontend
 
 jobs:
   build-and-deploy:
