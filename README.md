@@ -66,7 +66,10 @@ The backend will be available at `http://localhost:3004`.
    ```bash
    npm start
    ```
-
+5. Build the frontend development server:
+   ```bash
+   npm run build
+   ```
 The application will open automatically in your default browser at `http://localhost:3000`.
 
 ## Testing
