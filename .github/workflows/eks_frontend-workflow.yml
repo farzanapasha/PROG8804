@@ -29,15 +29,12 @@ jobs:
       env:
         CI: false
 
-    - name: Build Frontend APP
+    - name: Build Frontend APP upload static file to S3
       run: |
         cd frontend
         npm run build
-        ls
+        aws s3 cp build/ s3://frontend-app-1103736086 --recursive
       env:
         CI: false
 
-    - name: Push build files to S3 bucket
-      run: |
-        aws s3 cp build/ s3://frontend-app-1103736086 --recursive
 
