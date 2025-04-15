@@ -62,5 +62,6 @@ jobs:
 
     - name: Deploy to Kubernetes
       run: |
+        aws eks update-kubeconfig --name demo-eks-cluster --region us-east-1
         kubectl -n demo set image deployment/backend-deployment backend=$ECR_REGISTRY/$ECR_REPO:${{ env.IMAGE_TAG }}
         kubectl -n demo rollout status deployment/backend-deployment
