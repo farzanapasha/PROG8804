@@ -62,5 +62,5 @@ jobs:
 
     - name: Deploy to Kubernetes
       run: |
-        kubectl set image deployment/backend-deployment backend=$ECR_REGISTRY/$ECR_REPO:${{ env.IMAGE_TAG }}
-        kubectl rollout status deployment/backend-deployment
+        kubectl -n demo set image deployment/backend-deployment backend=$ECR_REGISTRY/$ECR_REPO:${{ env.IMAGE_TAG }}
+        kubectl -n demo rollout status deployment/backend-deployment
