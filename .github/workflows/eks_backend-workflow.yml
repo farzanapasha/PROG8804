@@ -1,4 +1,4 @@
-name: Build and Push Docker Image to ECR
+name: Build and Deploy Docker Image to ECR
 
 on:
   push:
@@ -9,7 +9,7 @@ env:
   ECR_REPO: backend
 
 jobs:
-  build-and-push:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     permissions:
