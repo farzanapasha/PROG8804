@@ -33,6 +33,7 @@ jobs:
 
     - name: Build Docker image
       run: |
+        cd backend
         docker build -t $ECR_REPO:${{ env.IMAGE_TAG }} .
 
     - name: Tag image with ECR URI
