@@ -19,3 +19,9 @@ variable "repo_name" {
   type        = string
   default     = "repo-name"
 }
+
+variable "frontend_bucket" {
+  description = "S3 bucket to host frontend"
+  type        = string
+  default     = "frontend.example.com"
+}
